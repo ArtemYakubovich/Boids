@@ -7,8 +7,11 @@ public class Boid : MonoBehaviour
     [Header("Set Dynamically")]
     public Rigidbody rigid;
 
+    private Neighborhood neighborhood;
+
     private void Awake()
     {
+        neighborhood = GetComponent<Neighborhood>();
         rigid = GetComponent<Rigidbody>();
         pos = Random.insideUnitSphere * Spawner.S.spawnRadius;
         Vector3 vel = Random.onUnitSphere * Spawner.S.velocity;
