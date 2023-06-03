@@ -51,12 +51,65 @@ public class Boid : MonoBehaviour
         Vector3 vel = rigid.velocity;
         Spawner spn = Spawner.S;
 
+        Vector3 velAvoid = Vector3.zero;
+        Vector3 tooClosePos = neighborhood.avgClosePos;
+
+        if (tooClosePos != Vector3.zero)
+        {
+            velAvoid = pos - tooClosePos;
+            velAvoid.Normalize();
+            velAvoid *= spn.velocity;
+        }
+
+        Vector3 velAlign = neighborhood.avgVel;
+
+        if (velAlign != Vector3.zero)
+        {
+            velAlign.Normalize();
+            velAlign *= spn.velocity;
+        }
+
+        Vector3 velCentre = neighborhood.avgPos;
+        if (velCentre != Vector3.zero)
+        {
+            velCentre -= transform.position;
+            velCentre.Normalize();
+            velCentre *= spn.velocity;
+        }
+
         Vector3 delta = Attractor.POS - pos;
         bool attracted = (delta.magnitude > spn.attractPushDist);
         Vector3 velAttract = delta.normalized * spn.velocity;
 
         float fdt = Time.fixedDeltaTime;
 
+        if (velAvoid != Vector3.zero)
+        {
+            vel = Vector3.Lerp(vel, velAvoid, spn.collAvoid * fdt);
+        }
+        else
+        {
+            if (velAlign != Vector3.zero)
+            {
+                vel = Vector3.Lerp(vel, velAlign, spn.velMatching * fdt);
+            }
+            if (velCentre != Vector3.zero)
+            {
+                vel = Vector3.Lerp(vel, velAlign, spn.flockCentering * fdt);
+            }
+            if (velAttract != Vector3.zero)
+            {
+                if (attracted)
+                {
+                    vel = Vector3.Lerp(vel, velAttract, spn.attractPull * fdt);
+                }
+                else
+                {
+                    vel = Vector3.Lerp(vel, -velAttract, spn.attractPush * fdt);
+                }
+            }
+        }
+        
         if (attracted)
         {
             vel = Vector3.Lerp(vel, velAttract, spn.attractPull * fdt);
